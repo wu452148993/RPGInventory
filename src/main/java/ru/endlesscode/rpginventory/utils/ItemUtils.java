@@ -110,7 +110,37 @@ public class ItemUtils {
     }
 
     @NotNull
-    public static ItemStack getTexturedItem(String texture) {
+    public static ItemStack getTexturedItem(String texture) { 	
+    	String[] textures = texture.split(":");
+    	XMaterial xmat = XMaterial.XfromString(texture);
+        if (xmat == null) {
+            RPGInventory.getPluginLogger().warning("Material " + texture + " not found");
+            return new ItemStack(Material.AIR);
+        }
+        
+        ItemStack item = xmat.parseItem();
+        
+        if (textures.length == 2) {
+            // if (item.getType() == Material.MONSTER_EGG) {
+         	 if (xmat.parseIMaterial() == IMaterial.MONSTER_EGG) {
+                 item = toBukkitItemStack(item);
+                 NbtCompound nbt = NbtFactory.asCompound(NbtFactory.fromItemTag(item));
+                 nbt.put("EntityTag", NbtFactory.ofCompound("temp").put("id", textures[1]));
+             } else {
+            	 if(XMaterial.isDamageable(xmat))
+            	 {
+            		 item.setDurability(Short.parseShort(textures[1]));
+            	 }
+            	 
+                 if (isItemHasDurability(item)) {
+                     item = setTag(item, UNBREAKABLE_TAG, "1");
+                     item = setTag(item, HIDE_FLAGS_TAG, "63");
+                 }
+             }
+         }
+        
+        return item;
+    	/*
         String[] textures = texture.split(":");
 
         if (Material.getMaterial(textures[0]) == null) {
@@ -136,7 +166,7 @@ public class ItemUtils {
             }
         }
 
-        return item;
+        return item;*/
     }
 
     private static boolean isItemHasDurability(ItemStack item) {
